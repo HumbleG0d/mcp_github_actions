@@ -27,3 +27,16 @@ export interface DownloadResult{
     filename?: string
     error?: string
 }
+
+export interface ToolResponse{
+    content: Array<{
+        type: 'text',
+        text: string
+    }>
+    [key: string]: unknown
+}
+
+export interface ToolParams{
+    repositoryName: string
+    id: number
+}
