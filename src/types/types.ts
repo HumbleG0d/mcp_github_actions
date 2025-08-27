@@ -45,6 +45,7 @@ export interface ToolResponse{
 }
 
 export interface ToolParams{
-    repositoryName: string
     id: number
+    repositoryName: string
+    dirName: string
 }

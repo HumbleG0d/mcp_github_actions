@@ -5,5 +5,7 @@ export interface IDevOpsMCP{
     handleShowRepos: () => Promise<ToolResponse>
     handleShowWorkflows: (repositoryName: ToolParams) => Promise<ToolResponse>
     handleDownloadLogs: ({repositoryName , id} : ToolParams) => Promise<ToolResponse>
+    //Metodo para que el MODELO lea los logs 
+    handleReadLogs: (filename : ToolParams) => Promise<ToolResponse>
     start : () => Promise<void>
 }

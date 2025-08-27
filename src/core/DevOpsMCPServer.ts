@@ -4,6 +4,7 @@ import { IDevOpsMCP } from "./IDevOpsMCP";
 import { z } from "zod";
 import { ToolParams, ToolResponse } from "@/types/types";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio";
+import { readMultiplesFile } from "../github/utils/downloadLogs";
 
 
 export class DevOpsMCPServer implements IDevOpsMCP{
@@ -58,6 +59,15 @@ export class DevOpsMCPServer implements IDevOpsMCP{
                 inputSchema: { repositoryName: z.string() , id: z.number()}
             },
             (params) => this.handleDownloadLogs(params as ToolParams)
+        )
+
+        this.server.registerTool("read_logs" , 
+            {
+                title: "Read logs",
+                description: "Leera los logs del workflow fallido",
+                inputSchema: { dirName: z.string() }
+            },
+            (params) => this.handleReadLogs(params as ToolParams)
         )
     }
 
@@ -154,6 +164,39 @@ export class DevOpsMCPServer implements IDevOpsMCP{
         }
     }
 
+    //Metodo encargado de leer el(los) archivos
+    async handleReadLogs (params: ToolParams) : Promise<ToolResponse>{
+        try {
+            const infoLogs = await readMultiplesFile(params.dirName)
+            if(!infoLogs){
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: "Contedio del texto vacio"
+                        }
+                    ]
+                }
+            }
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Erro al retornar los archivos leidos ${JSON.stringify(infoLogs, null, 2)}`
+                    }
+                ]
+            }
+        } catch (error) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    }
+                ]
+            }
+        }
+    }
 
     async start() : Promise<void>{
         try {
