@@ -1,3 +1,11 @@
+export interface GitHubRepo{
+    id: number
+    name: string
+    private: boolean
+}
+
+export type GitHubAllRepos = GitHubRepo[]
+
 export interface GitHubUser {
     login: string
     id: number

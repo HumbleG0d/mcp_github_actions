@@ -31,6 +31,17 @@ export class DevOpsMCPServer implements IDevOpsMCP{
 
     //Funcion que registrara las herramientas
     registerTools = () : void => {
+
+        this.server.registerTool("show_repositories" , 
+            {
+                title: "Show workflows",
+                description: "It will show the workflows of a given repository",
+                inputSchema: { }
+            },
+            () => this.handleShowRepos()
+        )
+
+
         this.server.registerTool("show_workflows" ,
             {
                 title: "Show workflows",
@@ -49,6 +60,33 @@ export class DevOpsMCPServer implements IDevOpsMCP{
             (params) => this.handleDownloadLogs(params as ToolParams)
         )
     }
+
+    //Obtencion de los repositorios
+    async handleShowRepos () : Promise<ToolResponse>{
+        try {
+            const client = await this.initializeGithubClient()
+            const data = await client.getAllRepos()
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Repositories found: ${JSON.stringify(data, null, 2)}`
+                    }
+                ]
+            }
+        } catch (error) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    }
+                ]
+            }
+        }
+    }
+
+
 
     //Obtencion de los workflows
     async handleShowWorkflows (paramas: ToolParams) : Promise<ToolResponse>  {
@@ -71,7 +109,7 @@ export class DevOpsMCPServer implements IDevOpsMCP{
                 content: [
                     {
                         type: "text",
-                        text: `Error: ${error instanceof Error ? error.message : 'Error desconocido'}`
+                        text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
                     }
                 ]
             }

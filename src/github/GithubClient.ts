@@ -1,5 +1,5 @@
 import { GithubAPI } from "./GithubAPI"
-import { GitHubWorkflowRun, DownloadResult, GitHubResponse } from "@/types/types"
+import { GitHubWorkflowRun, DownloadResult, GitHubResponse, GitHubRepo, GitHubAllRepos } from "@/types/types"
 import { getCredentidalGithub } from "./credentialsGithub"
 import { writeFile } from "fs/promises"
 
@@ -9,7 +9,6 @@ export class GithubClient implements GithubAPI {
     private isInitialize = false
 
     constructor(){    }
- 
 
     private buildHeaders(accept: string): Record<string, string> {
         this.ensureInitialized()
@@ -45,6 +44,33 @@ export class GithubClient implements GithubAPI {
             throw new Error('GitHub client not initialized. Call initialize() first.')
         }
     }
+
+
+    async getAllRepos() : Promise<GitHubRepo[]> {
+        try {
+            const response = await fetch('https://api.github.com/user/repos' , {
+                method: 'GET' , 
+                headers: this.buildHeaders('application/vnd.github.v3+json')
+            })
+
+            await this.ensureOk(response)
+            const data = await response.json() as GitHubAllRepos
+
+            const repodaData : GitHubRepo[] = data.map(repo => ({
+                id: repo.id,
+                name: repo.name,
+                private: repo.private
+            }))
+
+            return repodaData
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Error getting repositories: ${error.message}`)
+            }
+            throw new Error('Unknown error getting repositories')
+        }
+    }
+
 
     async getDataWorkflows(repositoryName: string): Promise<GitHubWorkflowRun[]> {
         this.ensureInitialized()
@@ -102,7 +128,7 @@ export class GithubClient implements GithubAPI {
 
             await this.ensureOk(response)
 
-            //Triger para descargar los logs
+            //Triger para descargar los logs. Violamos el principo de responsabilidad unica
             const buffer = Buffer.from( await response.arrayBuffer())
             const filenName = `log_${id}`
             await writeFile(filenName , buffer)
