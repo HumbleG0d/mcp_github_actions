@@ -15,7 +15,8 @@ export class GithubClient implements GithubAPI {
         return {
             'Accept': accept,
             'Authorization': `Bearer ${this.token}`,
-            'User-Agent': 'MCP-DevOps/1.0.0'
+            'User-Agent': 'MCP-DevOps/1.0.0',
+            'X-GitHub-Api-Version': '2022-11-28'
         }
     }
 
@@ -123,7 +124,8 @@ export class GithubClient implements GithubAPI {
 
         try {
             const response = await fetch(`https://api.github.com/repos/${this.user}/${encodeURIComponent(repositoryName)}/actions/runs/${encodeURIComponent(id)}/logs` , {
-                headers: this.buildHeaders('application/vnd.github.v3.raw')
+                redirect: 'follow',
+                headers: this.buildHeaders('application/vnd.github+json')
             })
 
             await this.ensureOk(response)
