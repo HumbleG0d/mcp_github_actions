@@ -1,7 +1,7 @@
 import { GithubAPI } from "./GithubAPI"
 import { GitHubWorkflowRun, DownloadResult, GitHubResponse, GitHubRepo, GitHubAllRepos } from "@/types/types"
 import { getCredentidalGithub } from "./credentialsGithub"
-import { writeFile } from "fs/promises"
+import { downloadLogs } from "./utils/downloadLogs"
 
 export class GithubClient implements GithubAPI {
     private  token?: string
@@ -128,15 +128,15 @@ export class GithubClient implements GithubAPI {
 
             await this.ensureOk(response)
 
-            //Triger para descargar los logs. Violamos el principo de responsabilidad unica
-            const buffer = Buffer.from( await response.arrayBuffer())
-            const filenName = `log_${id}`
-            await writeFile(filenName , buffer)
-
-            return {
-                success: true,
-                filename: filenName
+            // Verificar si hay logs disponibles
+            if (response.status === 204) {
+                return {
+                    success: false,
+                    error: 'No logs available for this workflow run'
+                }
             }
+
+            return await downloadLogs(id, response)
         } catch (error) {
             return {
                 success: false,

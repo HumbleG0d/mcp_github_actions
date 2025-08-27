@@ -122,11 +122,23 @@ export class DevOpsMCPServer implements IDevOpsMCP{
         try {
             const client = await this.initializeGithubClient()
             const data = await client.getFileLogs(paramas.repositoryName , paramas.id) 
+            
+            if (!data.success) {
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: `Error downloading logs: ${data.error || 'Unknown error'}`
+                        }
+                    ]
+                }
+            }
+            
             return {
                 content: [
                     {
                         type: "text",
-                        text: `Logs downloaded successfully: ${data.filename}`
+                        text: `Logs downloaded successfully to: ${data.filename}`
                     }
                 ]
             }
