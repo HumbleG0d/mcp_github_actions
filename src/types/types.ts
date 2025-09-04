@@ -78,3 +78,17 @@ export enum Type {
     Blob = "blob",
     Tree = "tree",
 }
+
+
+export interface UpdateFile{
+    message: string
+    sha: string
+    content: string
+}
+
+
+export interface ToolParamsUpdateFile{
+    repositoryName: string
+    path: string
+    content: string
+}

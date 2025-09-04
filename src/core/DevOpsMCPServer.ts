@@ -2,7 +2,7 @@ import { GithubClient } from "../github/GithubClient";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { IDevOpsMCP } from "./IDevOpsMCP";
 import { z } from "zod";
-import { ToolParams, ToolResponse } from "@/types/types";
+import { ToolParams, ToolParamsUpdateFile, ToolResponse } from "@/types/types";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio";
 import { readMultiplesFile } from "../github/utils/downloadLogs";
 
@@ -86,6 +86,16 @@ export class DevOpsMCPServer implements IDevOpsMCP{
         },
         (params) => this.handleShowContentTree(params as ToolParams)
         )
+
+        this.server.registerTool("Update file" , 
+            {
+                title: "Update file",
+                description: "It will update the content of a given file",
+                inputSchema: { repositoryName: z.string() , path: z.string() , content: z.string() }
+            },
+            (params) => this.handleUpdateFile(params as ToolParamsUpdateFile)
+        )
+        
     }
 
     //Obtencion de los repositorios
@@ -216,7 +226,7 @@ export class DevOpsMCPServer implements IDevOpsMCP{
     }
 
 
-    //Metodo encargado de mostrar  el contenido del arbol del repositorio
+    //Metodo que usara el cliente de github para obtener el contenido del arbol del repositorio
     async handleShowContentTree ({ repositoryName, nameBranch }: ToolParams ) : Promise<ToolResponse> {
         try {
             const client = await this.initializeGithubClient()
@@ -244,7 +254,7 @@ export class DevOpsMCPServer implements IDevOpsMCP{
 
 
 
-    //Metodo encargado de mostrar el contenido de los archivos del repositorio
+    //Metodo que usara el cliente de github para obtener el contenido de los archivos del repositorio
     async handleShowContentFiles (params: ToolParams) : Promise<ToolResponse>{
         try {
             const client = await this.initializeGithubClient()
@@ -253,11 +263,38 @@ export class DevOpsMCPServer implements IDevOpsMCP{
                 content: [
                     {
                         type: "text",
-                        text: `Contenido del repositorio: ${JSON.stringify(data, null, 2)}`
+                        text: `View content files: ${JSON.stringify(data, null, 2)}`
                     }
                 ]
             }
         }catch(error){
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    }
+                ]
+            }
+        }
+    }
+
+
+    //Metodo que usara el cliente de github para actualizar el contenido de los archivos del repositorio
+
+    async handleUpdateFile (params : ToolParamsUpdateFile) : Promise<ToolResponse> {
+        try {
+            const client = await this.initializeGithubClient()
+            const data = await client.updateFile(params.repositoryName, params.path, params.content) 
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Update file: ${JSON.stringify(data, null, 2)}`
+                    }
+                ]
+            }
+        } catch (error) {
             return {
                 content: [
                     {

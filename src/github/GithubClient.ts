@@ -1,5 +1,5 @@
 import { GithubAPI } from "./GithubAPI"
-import { GitHubWorkflowRun, DownloadResult, GitHubResponse, GitHubRepo, GitHubAllRepos, ContentGitubRepo, Tree, Welcome } from "@/types/types"
+import { GitHubWorkflowRun, DownloadResult, GitHubResponse, GitHubRepo, GitHubAllRepos, ContentGitubRepo, Tree, Welcome, UpdateFile } from "@/types/types"
 import { getCredentidalGithub } from "./credentialsGithub"
 import { downloadLogs } from "./utils/downloadLogs"
 
@@ -190,6 +190,14 @@ export class GithubClient implements GithubAPI {
     async getContentFiles (repositoryName: string , path? : string): Promise<ContentGitubRepo>{
         this.ensureInitialized()
 
+        if (!repositoryName || typeof repositoryName !== 'string') {
+            throw new Error('Repository name is required and must be a text string')
+        }
+
+        if (path && typeof path !== 'string') {
+            throw new Error('Path is required and must be a text string')
+        }
+
         try {
             // Construir la URL correctamente para manejar path undefined o vacío
             const baseUrl = `https://api.github.com/repos/${this.user}/${encodeURIComponent(repositoryName)}/contents`
@@ -219,6 +227,51 @@ export class GithubClient implements GithubAPI {
             throw new Error('Unknown error getting bring content repo ')
         }
         
+    }
+
+
+    //Metodo para actualizar el contenido de los archivos del repositorio
+    async updateFile (repositoryName: string, path: string, content: string) : Promise<UpdateFile> {
+        
+        this.ensureInitialized()
+
+        if (!repositoryName || typeof repositoryName !== 'string') {
+            throw new Error('Repository name is required and must be a text string')
+        }
+
+        
+        if (path && typeof path !== 'string') {
+            throw new Error('Path is required and must be a text string')
+        }
+
+        //TODO : SI ES POSIBLE VALIDAR EL CONTENT
+        try {
+            const response = await fetch(`https://api.github.com/repos/${this.user}/${encodeURIComponent(repositoryName)}/contents/${path}`, {
+                method: 'PUT',
+                headers: this.buildHeaders('application/vnd.github.v3+json'),
+                body: JSON.stringify({
+                    content: Buffer.from(content).toString('base64')
+                })
+            })
+
+            await this.ensureOk(response)
+
+            const data = await response.json() as ContentGitubRepo
+
+            const repoData : UpdateFile = {
+                message: "Update file",
+                sha: data.sha,
+                content: data.content,
+            }
+
+            return repoData
+            
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Error update content repo: ${error.message}`)
+            }
+            throw new Error('Unknown error update content repo')
+        }
     }
 
 }

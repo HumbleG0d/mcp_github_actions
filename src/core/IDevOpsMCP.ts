@@ -1,4 +1,4 @@
-import { ToolParams, ToolResponse } from "@/types/types"
+import { ToolParams, ToolParamsUpdateFile, ToolResponse } from "@/types/types"
 
 export interface IDevOpsMCP{
     registerTools : () => void
@@ -13,7 +13,8 @@ export interface IDevOpsMCP{
     handleShowContentTree: ({repositoryName , nameBranch} : ToolParams) => Promise<ToolResponse> 
     
     //Metodo para acceder al respostorio y modficar los archivos 
-    
+    handleUpdateFile: ({repositoryName , path , content} : ToolParamsUpdateFile) =>Promise<ToolResponse>
+
     //Metodo para hacer push y pull
     
     //Creacion de otra rama
