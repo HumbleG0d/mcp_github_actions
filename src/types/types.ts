@@ -4,7 +4,18 @@ export interface GitHubRepo{
     private: boolean
 }
 
+
+export interface ContentGitubRepo{
+    name: string
+    path: string
+    sha: string
+    type: string
+    content: string
+}
+
 export type GitHubAllRepos = GitHubRepo[]
+
+//export type ContentGithubRepos = ContentGitubRepo []
 
 export interface GitHubUser {
     login: string
@@ -48,4 +59,22 @@ export interface ToolParams{
     id: number
     repositoryName: string
     dirName: string
+    path: string
+    nameBranch: string
+}
+
+export interface Welcome {
+    sha:       string;
+    tree:      Tree[];
+}
+
+export interface Tree {
+    path:  string;
+    type:  Type;
+    sha:   string;
+}
+
+export enum Type {
+    Blob = "blob",
+    Tree = "tree",
 }

@@ -1,4 +1,4 @@
-import {GitHubWorkflowRun , DownloadResult, GitHubRepo} from "@/types/types"
+import {GitHubWorkflowRun , DownloadResult, GitHubRepo, ContentGitubRepo, Tree} from "@/types/types"
 
 export interface GithubAPI {
 
@@ -7,4 +7,8 @@ export interface GithubAPI {
     getDataWorkflows: (repositoryName: string) => Promise<GitHubWorkflowRun[]>
 
     getFileLogs: (repositoryName: string , id: number) => Promise<DownloadResult>
+
+    getContentTree:(repositoryName: string , nameBranch: string) => Promise<Tree[]>
+    
+    getContentFiles: (repositoryName: string,path?: string) => Promise<ContentGitubRepo>
 }

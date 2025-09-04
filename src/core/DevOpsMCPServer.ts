@@ -69,6 +69,23 @@ export class DevOpsMCPServer implements IDevOpsMCP{
             },
             (params) => this.handleReadLogs(params as ToolParams)
         )
+
+        this.server.registerTool("show_content_files" , 
+            {
+                title: "Show content files",
+                description: "It will show the content of a given repository files",
+                inputSchema: { repositoryName : z.string() ,  path: z.string()     }
+            },
+            (params) => this.handleShowContentFiles(params as ToolParams)
+        )
+
+        this.server.registerTool("show_content_repo" , {
+            title: "Show content repository",
+            description: "It will show the content of a given repository",
+            inputSchema: { repositoryName : z.string() , nameBranch: z.string() }
+        },
+        (params) => this.handleShowContentTree(params as ToolParams)
+        )
     }
 
     //Obtencion de los repositorios
@@ -164,7 +181,7 @@ export class DevOpsMCPServer implements IDevOpsMCP{
         }
     }
 
-    //Metodo encargado de leer el(los) archivos
+    //Metodo encargado de leer el contenido de los archivos
     async handleReadLogs (params: ToolParams) : Promise<ToolResponse>{
         try {
             const infoLogs = await readMultiplesFile(params.dirName)
@@ -197,6 +214,61 @@ export class DevOpsMCPServer implements IDevOpsMCP{
             }
         }
     }
+
+
+    //Metodo encargado de mostrar  el contenido del arbol del repositorio
+    async handleShowContentTree ({ repositoryName, nameBranch }: ToolParams ) : Promise<ToolResponse> {
+        try {
+            const client = await this.initializeGithubClient()
+            const data = await client.getContentTree(repositoryName , nameBranch)
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Contenido del repositorio: ${JSON.stringify(data, null, 2)}`
+                    }
+                ]
+            }
+        }catch(error){
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    }
+                ]
+            }
+        }
+    }
+
+
+
+
+    //Metodo encargado de mostrar el contenido de los archivos del repositorio
+    async handleShowContentFiles (params: ToolParams) : Promise<ToolResponse>{
+        try {
+            const client = await this.initializeGithubClient()
+            const data = await client.getContentFiles(params.repositoryName, params.path)
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Contenido del repositorio: ${JSON.stringify(data, null, 2)}`
+                    }
+                ]
+            }
+        }catch(error){
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    }
+                ]
+            }
+        }
+    }
+
 
     async start() : Promise<void>{
         try {

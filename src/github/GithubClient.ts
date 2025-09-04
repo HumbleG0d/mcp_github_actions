@@ -1,5 +1,5 @@
 import { GithubAPI } from "./GithubAPI"
-import { GitHubWorkflowRun, DownloadResult, GitHubResponse, GitHubRepo, GitHubAllRepos } from "@/types/types"
+import { GitHubWorkflowRun, DownloadResult, GitHubResponse, GitHubRepo, GitHubAllRepos, ContentGitubRepo, Tree, Welcome } from "@/types/types"
 import { getCredentidalGithub } from "./credentialsGithub"
 import { downloadLogs } from "./utils/downloadLogs"
 
@@ -146,4 +146,79 @@ export class GithubClient implements GithubAPI {
             }
         }
     }
+
+    //Retorna el contenido del arbol del repositorio
+    async getContentTree (repositoryName: string, nameBranch: string | "main") : Promise<Tree[]> {
+        this.ensureInitialized()
+
+
+        if (!repositoryName || typeof repositoryName !== 'string') {
+            throw new Error('Repository name is required and must be a text string')
+        }
+
+        if (!nameBranch || typeof nameBranch !== 'string') {
+            throw new Error('Name branch is required and must be a text string')
+        }
+
+        try {
+            const response = await fetch(`https://api.github.com/repos/${this.user}/${encodeURIComponent(repositoryName)}/git/trees/${encodeURIComponent(nameBranch)}?recursive=1` , {
+                method: 'GET',
+                headers: this.buildHeaders('application/vnd.github.v3+json')
+            })
+
+            await this.ensureOk(response)
+            const data = await response.json() as Welcome
+            
+            const treeData : Tree[] = data.tree.map(tree => ({
+                path: tree.path,
+                type: tree.type,
+                sha: tree.sha
+            }))
+            
+            return treeData
+
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Error getting workflows: ${error.message}`)
+            }
+            throw new Error('Unknown error getting workflows')
+        }
+
+    }
+
+    //Retornar el contenido de los archivos del repositorio
+    async getContentFiles (repositoryName: string , path? : string): Promise<ContentGitubRepo>{
+        this.ensureInitialized()
+
+        try {
+            // Construir la URL correctamente para manejar path undefined o vacío
+            const baseUrl = `https://api.github.com/repos/${this.user}/${encodeURIComponent(repositoryName)}/contents`
+            const url = path && path.trim() !== '' ? `${baseUrl}/${encodeURIComponent(path)}` : baseUrl
+            
+            const response = await fetch(url , {
+                method: 'GET',
+                headers: this.buildHeaders('application/vnd.github.v3+json')
+            })
+
+            await this.ensureOk(response)
+
+            const data = await response.json() as ContentGitubRepo
+
+            const repoData : ContentGitubRepo = {
+                name: data.name,
+                path: data.path,
+                sha: data.sha,
+                type: data.type,
+                content: Buffer.from(data.content , 'base64').toString('utf-8')
+            }
+            return repoData
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Error getting bring content repo: ${error.message}`)
+            }
+            throw new Error('Unknown error getting bring content repo ')
+        }
+        
+    }
+
 }
