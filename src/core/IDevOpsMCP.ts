@@ -11,9 +11,13 @@ export interface IDevOpsMCP{
     handleShowContentFiles: ({repositoryName , path}: ToolParams) => Promise<ToolResponse>
 
     handleShowContentTree: ({repositoryName , nameBranch} : ToolParams) => Promise<ToolResponse> 
+    
     //Metodo para acceder al respostorio y modficar los archivos 
+    
     //Metodo para hacer push y pull
+    
     //Creacion de otra rama
+    
     //Metodo para hacer Re-run 
     start : () => Promise<void>
 }

@@ -170,7 +170,7 @@ export class GithubClient implements GithubAPI {
             const data = await response.json() as Welcome
             
             const treeData : Tree[] = data.tree.map(tree => ({
-                path: tree.path,
+                path: tree.path,    
                 type: tree.type,
                 sha: tree.sha
             }))
