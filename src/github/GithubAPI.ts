@@ -1,4 +1,4 @@
-import {GitHubWorkflowRun , DownloadResult, GitHubRepo, ContentGitubRepo, Tree, UpdateFile} from "@/types/types"
+import {GitHubWorkflowRun , DownloadResult, GitHubRepo, ContentGitubRepo, Tree, UpdateFile , CreateBranch} from "@/types/types"
 
 export interface GithubAPI {
 
@@ -12,5 +12,7 @@ export interface GithubAPI {
     
     getContentFiles: (repositoryName: string,path?: string) => Promise<ContentGitubRepo>
 
-    updateFile: (repositoryName: string , path: string , content:string) => Promise<UpdateFile>
+    updateFile: (repositoryName: string , path: string , content:string , sha:string , message:string) => Promise<UpdateFile>
+
+    createBranch: (repositoryName: string , newBranchName: string , sha:string) => Promise<CreateBranch>
 }

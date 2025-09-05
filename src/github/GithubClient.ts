@@ -1,5 +1,5 @@
 import { GithubAPI } from "./GithubAPI"
-import { GitHubWorkflowRun, DownloadResult, GitHubResponse, GitHubRepo, GitHubAllRepos, ContentGitubRepo, Tree, Welcome, UpdateFile } from "@/types/types"
+import { GitHubWorkflowRun, DownloadResult, GitHubResponse, GitHubRepo, GitHubAllRepos, ContentGitubRepo, Tree, Welcome, UpdateFile, CreateBranch } from "@/types/types"
 import { getCredentidalGithub } from "./credentialsGithub"
 import { downloadLogs } from "./utils/downloadLogs"
 
@@ -231,7 +231,7 @@ export class GithubClient implements GithubAPI {
 
 
     //Metodo para actualizar el contenido de los archivos del repositorio
-    async updateFile (repositoryName: string, path: string, content: string) : Promise<UpdateFile> {
+    async updateFile (repositoryName: string, path: string, content: string , sha: string , message: string) : Promise<UpdateFile> {
         
         this.ensureInitialized()
 
@@ -239,29 +239,34 @@ export class GithubClient implements GithubAPI {
             throw new Error('Repository name is required and must be a text string')
         }
 
-        
-        if (path && typeof path !== 'string') {
+        if (!path || typeof path !== 'string') {
             throw new Error('Path is required and must be a text string')
         }
 
-        //TODO : SI ES POSIBLE VALIDAR EL CONTENT
+        if (!content || typeof content !== 'string') {
+            throw new Error('Content is required and must be a text string')
+        }
+
         try {
-            const response = await fetch(`https://api.github.com/repos/${this.user}/${encodeURIComponent(repositoryName)}/contents/${path}`, {
+            // Ahora actualizamos el archivo con el SHA correcto
+            const response = await fetch(`https://api.github.com/repos/${this.user}/${encodeURIComponent(repositoryName)}/contents/${encodeURIComponent(path)}`, {
                 method: 'PUT',
                 headers: this.buildHeaders('application/vnd.github.v3+json'),
                 body: JSON.stringify({
-                    content: Buffer.from(content).toString('base64')
+                    message: message,
+                    content: Buffer.from(content).toString('base64'),
+                    sha: sha
                 })
             })
 
             await this.ensureOk(response)
 
-            const data = await response.json() as ContentGitubRepo
+            const data = await response.json() as UpdateFile
 
             const repoData : UpdateFile = {
-                message: "Update file",
+                message: data.message,
                 sha: data.sha,
-                content: data.content,
+                content: Buffer.from(data.content, 'base64').toString('utf-8')
             }
 
             return repoData
@@ -271,6 +276,48 @@ export class GithubClient implements GithubAPI {
                 throw new Error(`Error update content repo: ${error.message}`)
             }
             throw new Error('Unknown error update content repo')
+        }
+    }
+
+    //Metodo para crear una nueva rama
+    async createBranch (repositoryName: string, newBranchName: string, sha: string): Promise<CreateBranch> {
+        this.ensureInitialized()
+
+        if(!repositoryName || typeof repositoryName !== 'string') {
+            throw new Error('Repository name is required and must be a text string')
+        }
+
+        if(!newBranchName || typeof newBranchName !== 'string') {
+            throw new Error('Repository name is required and must be a text string')
+        }
+
+        if(!repositoryName || typeof repositoryName !== 'string') {
+            throw new Error('Repository name is required and must be a text string')
+        }
+
+        try {
+            const response = await fetch(`https://api.github.com/repos/${this.user}/${encodeURIComponent(repositoryName)}/git/refs`, {
+                method: 'POST',
+                headers: this.buildHeaders('application/vnd.github.v3+json'),
+                body: JSON.stringify({
+                    ref: `refs/heads/${newBranchName}`,
+                    sha: sha
+                })
+            })
+
+            await this.ensureOk(response)
+
+            const data = await response.json() as CreateBranch
+            const responseData : CreateBranch = {
+                message: 'Create branch',
+                sha: data.sha
+            }
+            return responseData
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Error create branch: ${error.message}`)
+            }
+            throw new Error('Unknown error create branch')
         }
     }
 

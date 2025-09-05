@@ -2,7 +2,7 @@ import { GithubClient } from "../github/GithubClient";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { IDevOpsMCP } from "./IDevOpsMCP";
 import { z } from "zod";
-import { ToolParams, ToolParamsUpdateFile, ToolResponse } from "@/types/types";
+import { ToolParams, ToolParamsCreateBranch, ToolParamsUpdateFile, ToolResponse } from "@/types/types";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio";
 import { readMultiplesFile } from "../github/utils/downloadLogs";
 
@@ -91,9 +91,17 @@ export class DevOpsMCPServer implements IDevOpsMCP{
             {
                 title: "Update file",
                 description: "It will update the content of a given file",
-                inputSchema: { repositoryName: z.string() , path: z.string() , content: z.string() }
+                inputSchema: { repositoryName: z.string() , path: z.string() , content: z.string() , sha: z.string() , message: z.string() }
             },
             (params) => this.handleUpdateFile(params as ToolParamsUpdateFile)
+        )
+
+        this.server.registerTool("create_branch" , {
+            title: "Create branch" ,
+            description: "It will create a new branch" ,
+            inputSchema: { repositoryName: z.string() , newBranchName: z.string() , sha: z.string() }
+        },
+        (params) => this.handleCreateBranch(params as ToolParamsCreateBranch)
         )
         
     }
@@ -285,7 +293,7 @@ export class DevOpsMCPServer implements IDevOpsMCP{
     async handleUpdateFile (params : ToolParamsUpdateFile) : Promise<ToolResponse> {
         try {
             const client = await this.initializeGithubClient()
-            const data = await client.updateFile(params.repositoryName, params.path, params.content) 
+            const data = await client.updateFile(params.repositoryName, params.path, params.content, params.sha, params.message) 
             return {
                 content: [
                     {
@@ -305,6 +313,32 @@ export class DevOpsMCPServer implements IDevOpsMCP{
             }
         }
     }
+
+    async handleCreateBranch ({ repositoryName, newBranchName, sha }: ToolParamsCreateBranch) : Promise<ToolResponse> {
+        try {
+            const client = await this.initializeGithubClient()
+            const data = await client.createBranch(repositoryName, newBranchName, sha)
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Create branch: ${JSON.stringify(data, null, 2)}`
+                    }
+                ]
+            }
+        } catch (error) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    }
+                ]
+            }
+        }
+    }
+
+
 
 
     async start() : Promise<void>{

@@ -91,4 +91,17 @@ export interface ToolParamsUpdateFile{
     repositoryName: string
     path: string
     content: string
+    sha: string
+    message: string
+}
+
+export interface ToolParamsCreateBranch{
+    repositoryName: string
+    newBranchName: string
+    sha: string
+}
+
+export interface CreateBranch{
+    message: string
+    sha: string
 }
