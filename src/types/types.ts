@@ -105,3 +105,12 @@ export interface CreateBranch{
     message: string
     sha: string
 }
+
+export interface RerunWorkflow{
+    message: string
+    status: string
+}
+
+export interface StatusWorkflow{
+    status: string
+}

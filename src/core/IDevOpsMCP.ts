@@ -17,9 +17,16 @@ export interface IDevOpsMCP{
 
     //Creacion de otra rama
     handleCreateBranch: ({repositoryName , newBranchName ,sha} : ToolParamsCreateBranch) => Promise<ToolResponse>
-    //Metodo para hacer push y pull
+   
     
-    
+    //Metodo para ejecutrar de nuevo el workflow
+    handleRerunWorkflow:({repositoryName , id}: ToolParams) => Promise<ToolResponse>
+
+
+    //Metodo para obtener el status del workflow
+    handleGetStatusWorkflow: ({repositoryName , id} : ToolParams) => Promise<ToolResponse>
+
+
     //Metodo para hacer Re-run 
     start : () => Promise<void>
 }

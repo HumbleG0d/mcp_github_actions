@@ -103,6 +103,23 @@ export class DevOpsMCPServer implements IDevOpsMCP{
         },
         (params) => this.handleCreateBranch(params as ToolParamsCreateBranch)
         )
+
+        this.server.registerTool("rerun_workflow" , 
+            {
+                title: "Rerun Workflow" ,
+                description: "It will rerun a workflow" ,
+                inputSchema: {repositoryName: z.string() , id: z.number()}
+            },
+            (params) => this.handleRerunWorkflow(params as ToolParams)
+        )
+
+        this.server.registerTool("status_workflow" , {
+            title: "Status Workflow" ,
+            description: "It will get the status of a workflow" ,
+            inputSchema: {repositoryName: z.string() , id: z.number()}
+        },
+        (params) => this.handleGetStatusWorkflow(params as ToolParams)
+        )
         
     }
 
@@ -339,6 +356,54 @@ export class DevOpsMCPServer implements IDevOpsMCP{
     }
 
 
+    async handleRerunWorkflow ( paramas : ToolParams) : Promise<ToolResponse> {
+        try {
+            const client = await this.initializeGithubClient()
+            const data = await client.rerunWorkflow(paramas.repositoryName, paramas.id)
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Rerun workflow: ${JSON.stringify(data, null, 2)}`
+                    }
+                ]
+            }
+        } catch (error) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    }
+                ]
+            }
+        }
+    }
+
+    async handleGetStatusWorkflow (paramas: ToolParams) : Promise<ToolResponse> {
+        try {
+            const client = await this.initializeGithubClient()
+            const data = await client.getStatusWorkflow(paramas.repositoryName, paramas.id)
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Status workflow: ${JSON.stringify(data, null, 2)}`
+                    }
+                ]
+            }
+        } catch (error) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    }
+                ]
+            }
+        }
+    }
+    
 
 
     async start() : Promise<void>{

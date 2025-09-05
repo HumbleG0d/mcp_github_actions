@@ -1,5 +1,5 @@
 import { GithubAPI } from "./GithubAPI"
-import { GitHubWorkflowRun, DownloadResult, GitHubResponse, GitHubRepo, GitHubAllRepos, ContentGitubRepo, Tree, Welcome, UpdateFile, CreateBranch } from "@/types/types"
+import { GitHubWorkflowRun, DownloadResult, GitHubResponse, GitHubRepo, GitHubAllRepos, ContentGitubRepo, Tree, Welcome, UpdateFile, CreateBranch, RerunWorkflow, StatusWorkflow } from "@/types/types"
 import { getCredentidalGithub } from "./credentialsGithub"
 import { downloadLogs } from "./utils/downloadLogs"
 
@@ -320,5 +320,83 @@ export class GithubClient implements GithubAPI {
             throw new Error('Unknown error create branch')
         }
     }
+
+    async rerunWorkflow (repositoryName: string, runId: number): Promise<RerunWorkflow> {
+        this.ensureInitialized()
+
+        if(!repositoryName || typeof repositoryName !== 'string') {
+            throw new Error('Repository name is required and must be a text string')
+        }
+
+        if(typeof runId !== 'number') {
+            throw new Error('Run id is required and must be a number')
+        }
+
+        try {
+            const response = await fetch(`https://api.github.com/repos/${this.user}/${encodeURIComponent(repositoryName)}/actions/runs/${encodeURIComponent(runId)}/rerun`, {
+                method: 'POST',
+                headers: this.buildHeaders('application/vnd.github.v3+json')
+            })
+
+            // Verificar si la respuesta es exitosa
+            if (!response.ok) {
+                const errorText = await response.text()
+                throw new Error(`GitHub API Error: ${response.status} - ${response.statusText}. ${errorText}`)
+            }
+
+            // Verificar si hay contenido en la respuesta
+            const responseText = await response.text()
+
+            // Retornar éxito sin verificar status inmediatamente
+            const responseData: RerunWorkflow = {
+                message: 'Rerun workflow initiated successfully',
+                status: 'queued'
+            }
+
+            return responseData
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Error rerun workflow: ${error.message}`)
+            }
+            throw new Error('Unknown error rerun workflow')
+        }
+    }
+
+
+    //Metodo para obtener el status del workflow
+    async getStatusWorkflow (repositoryName: string , runId: number) : Promise<StatusWorkflow> {
+        this.ensureInitialized()
+    
+        if(!repositoryName || typeof repositoryName !== 'string') {
+            throw new Error('Repository name is required and must be a text string')
+        }
+
+        if(typeof runId !== 'number') {
+            throw new Error('Run id is required and must be a number')
+        }
+        
+        try {
+            const response = await fetch(`https://api.github.com/repos/${this.user}/${encodeURIComponent(repositoryName)}/actions/runs/${encodeURIComponent(runId)}`, {
+                method: 'GET',
+                headers: this.buildHeaders('application/vnd.github.v3+json')
+            })
+
+            await this.ensureOk(response)
+
+            const data = await response.json() as GitHubWorkflowRun
+
+            const responseData: StatusWorkflow = {
+                status: data.conclusion
+            }
+            return responseData
+            
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Error get status workflow: ${error.message}`)
+            }
+            throw new Error('Unknown error get status workflow')
+        }
+    }
+
 
 }
