@@ -25,6 +25,9 @@
     "url": "https://github.com/HumbleG0d/MCP_DevOps/issues"
   },
   "homepage": "https://github.com/HumbleG0d/MCP_DevOps#readme",
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
     "@types/jest": "30.0.0",
     "@types/node": "24.3.0",
