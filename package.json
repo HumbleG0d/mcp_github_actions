@@ -8,9 +8,11 @@
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "dev:watch": "nodemon --exec ts-node src/index.ts",
-    "clean": "rmdir /s /q dist 2>nul || echo Directorio dist limpiado",
+    "clean": "rimraf dist",
     "prebuild": "npm run clean",
-    "test": "jest"
+    "test": "jest",
+    "format": "prettier --write \"{src,test}/**/*.{ts,tsx,js,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"{src,test}/**/*.{ts,tsx,js,json,md,yml,yaml}\""
   },
   "repository": {
     "type": "git",
@@ -31,7 +33,8 @@
     "prettier": "3.6.2",
     "ts-jest": "29.4.1",
     "ts-node": "10.9.2",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "rimraf": "6.0.1"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.17.4",
