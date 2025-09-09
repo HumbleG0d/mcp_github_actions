@@ -288,11 +288,11 @@ export class GithubClient implements GithubAPI {
         }
 
         if(!newBranchName || typeof newBranchName !== 'string') {
-            throw new Error('Repository name is required and must be a text string')
+            throw new Error('Branch name is required and must be a text string')
         }
 
-        if(!repositoryName || typeof repositoryName !== 'string') {
-            throw new Error('Repository name is required and must be a text string')
+        if(!sha || typeof sha !== 'string') {
+            throw new Error('SHA is required and must be a text string')
         }
 
         try {

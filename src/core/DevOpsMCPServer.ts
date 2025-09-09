@@ -406,13 +406,15 @@ export class DevOpsMCPServer implements IDevOpsMCP{
     
 
 
-    async start() : Promise<void>{
+    async start(): Promise<void> {
         try {
-            const transport = new StdioServerTransport()
-            await this.server.connect(transport)
+          const transport = new StdioServerTransport()
+          await this.server.connect(transport)
         } catch (error) {
-            console.error('Error starting MCP server:', error)
-            process.exit(1)
+          if (error instanceof Error) {
+            throw new Error(`Error initial server: ${error.message}`)
+          }
+          throw new Error('Unknown error initial server user')
         }
-    } 
+    }
 }
